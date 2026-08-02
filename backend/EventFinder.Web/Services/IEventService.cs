@@ -4,7 +4,7 @@ namespace EventFinder.Web.Services
 {
     public interface IEventService
     {
-        Task<List<EventDto>> GetAllAsync();
+        Task<List<EventDto>> GetAllAsync(EventFilterDto filter);
 
         Task<EventDto?> GetByIdAsync(int id);
 

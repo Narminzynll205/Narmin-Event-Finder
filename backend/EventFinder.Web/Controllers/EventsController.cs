@@ -22,13 +22,14 @@ namespace EventFinder.Web.Controllers
             ?? throw new InvalidOperationException("User id claim not found.");
 
         /// <summary>
-        /// Returns all events. Supports filtering via query params (added in the search feature).
+        /// Returns events, optionally filtered by category, date range and/or proximity
+        /// (lat/lng/radiusKm - uses the Haversine formula for distance calculation).
         /// </summary>
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] EventFilterDto filter)
         {
-            var events = await _eventService.GetAllAsync();
+            var events = await _eventService.GetAllAsync(filter);
             return Ok(events);
         }
 

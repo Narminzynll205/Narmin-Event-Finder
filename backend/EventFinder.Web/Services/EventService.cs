@@ -1,6 +1,7 @@
 using EventFinder.Web.DTOs.Events;
 using EventFinder.Web.Models;
 using EventFinder.Web.Repositories;
+using EventFinder.Web.Utils;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventFinder.Web.Services
@@ -14,10 +15,48 @@ namespace EventFinder.Web.Services
             _eventRepository = eventRepository;
         }
 
-        public async Task<List<EventDto>> GetAllAsync()
+        public async Task<List<EventDto>> GetAllAsync(EventFilterDto filter)
         {
-            var events = await _eventRepository.Query().ToListAsync();
-            return events.Select(e => MapToDto(e)).ToList();
+            var query = _eventRepository.Query();
+
+            if (filter.Category.HasValue)
+            {
+                query = query.Where(e => e.Category == filter.Category.Value);
+            }
+
+            if (filter.DateFrom.HasValue)
+            {
+                query = query.Where(e => e.StartDateTime >= filter.DateFrom.Value);
+            }
+
+            if (filter.DateTo.HasValue)
+            {
+                query = query.Where(e => e.StartDateTime <= filter.DateTo.Value);
+            }
+
+            var events = await query.ToListAsync();
+
+            // Location-based filtering is done in-memory since Haversine distance
+            // cannot be translated to SQL directly.
+            var useLocationFilter = filter.Lat.HasValue && filter.Lng.HasValue && filter.RadiusKm.HasValue;
+            if (useLocationFilter)
+            {
+                return events
+                    .Select(e => new
+                    {
+                        Event = e,
+                        Distance = GeoUtils.HaversineDistanceKm(filter.Lat!.Value, filter.Lng!.Value, e.Latitude, e.Longitude)
+                    })
+                    .Where(x => x.Distance <= filter.RadiusKm!.Value)
+                    .OrderBy(x => x.Distance)
+                    .Select(x => MapToDto(x.Event, x.Distance))
+                    .ToList();
+            }
+
+            return events
+                .OrderBy(e => e.StartDateTime)
+                .Select(e => MapToDto(e))
+                .ToList();
         }
 
         public async Task<EventDto?> GetByIdAsync(int id)
