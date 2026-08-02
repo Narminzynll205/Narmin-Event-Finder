@@ -26,13 +26,15 @@ Event Finder — tədbir (event) təşkilatçılarının öz tədbirlərini payl
 
 ```
 EventFinder.Web/
- ├── Controllers/     # MVC + API controller-ləri
+ ├── Controllers/     # MVC + API controller-ləri (Auth, Events, Users, Chat, Home)
  ├── Models/          # Domain entity-ləri (ApplicationUser, Event, EventParticipant, ChatMessage...)
- ├── DTOs/            # Data Transfer Object-lər
- ├── Data/            # DbContext, seed data
- ├── Repositories/     # Data access qatı
- ├── Services/        # Biznes məntiqi (Auth, Event, Location, Chat)
- ├── Hubs/            # SignalR Hub-ları
+ ├── DTOs/            # Data Transfer Object-lər (Auth, Events, Users, Chat)
+ ├── Data/            # DbContext, EF Core Migrations, seed data
+ ├── Repositories/     # Data access qatı (Event, Chat)
+ ├── Services/        # Biznes məntiqi (Auth, Event, User/Location, Chat)
+ ├── Hubs/            # SignalR Hub-ları (ChatHub)
+ ├── Middleware/       # Qlobal exception handling
+ ├── Utils/           # Kömekçi funksiyalar (Haversine məsafə hesablama)
  └── Program.cs
 ```
 
@@ -66,15 +68,29 @@ GET    /api/events/{id}/participants
 GET    /api/users/nearby?lat=..&lng=..&radiusKm=..
 PUT    /api/users/location
 POST   /api/chat/send
-GET    /api/chat/history/{userId or eventId}
-/hubs/chat                              -> SignalR Hub
+GET    /api/chat/history/{id}?type=direct|event
+/hubs/chat                              -> SignalR Hub (connect with ?access_token=<JWT>)
 ```
+
+## Test istifadəçiləri (seed data)
+
+Development mühitində avtomatik yaradılır:
+
+| Email | Şifrə | Rollar |
+|---|---|---|
+| organizer@eventfinder.dev | Passw0rd! | Organizer, Participant |
+| participant@eventfinder.dev | Passw0rd! | Participant |
 
 ## Frontend inteqrasiyası
 
-Frontend ayrıca "Antigravity" aləti ilə hazırlanıb bu backend-ə qoşulacaq. Bu səbəbdən CORS development mühitində bütün origin-lərə açıqdır (`AllowAll` policy). **Production-da CORS mütləq konkret frontend domeni ilə məhdudlaşdırılmalıdır** (`Program.cs` daxilində `AllowedOrigins` konfiqurasiyasına baxın).
+Frontend ayrıca "Antigravity" aləti ilə hazırlanıb bu backend-ə qoşulacaq. Development mühitində CORS bütün origin-lərə açıqdır. **Production-da `Cors:AllowedOrigins` (`appsettings.json`) konfiqurasiyasına real frontend domeni yazılmalı və `FrontendPolicy` bu siyahı ilə məhdudlaşdırılmalıdır** (bax `Program.cs`).
+
+## Xəta idarəetməsi
+
+`/api/*` route-larında baş verən istisnalar `ExceptionHandlingMiddleware` tərəfindən tutulur və JSON formatında (status kodu + mesaj) qaytarılır. MVC (Razor) səhifələri isə standart `/Home/Error` səhifəsinə yönləndirilir.
 
 ## Qeydlər
 
 - Şifrələr ASP.NET Core Identity-nin daxili hashing mexanizmi ilə saxlanılır, heç vaxt plain-text deyil.
-- Bütün endpoint-lər üçün müvafiq HTTP status kodları qaytarılır (200, 201, 400, 401, 403, 404).
+- Bütün endpoint-lər üçün müvafiq HTTP status kodları qaytarılır (200, 201, 204, 400, 401, 403, 404).
+- JWT konfiqurasiyası (`Jwt:Key`, `Jwt:Issuer`, `Jwt:Audience`, `Jwt:ExpiryMinutes`) `appsettings.json`-dadır — **production-da `Jwt:Key` mütləq dəyişdirilməli və environment variable/secret manager vasitəsilə verilməlidir**.
