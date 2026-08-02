@@ -146,6 +146,11 @@ namespace EventFinder.Web.Services
                 return JoinEventResult.EventNotFound;
             }
 
+            if (ev.OrganizerId == userId)
+            {
+                return JoinEventResult.CannotJoinOwnEvent;
+            }
+
             var existingParticipant = await _eventRepository.GetParticipantAsync(eventId, userId);
             if (existingParticipant != null)
             {

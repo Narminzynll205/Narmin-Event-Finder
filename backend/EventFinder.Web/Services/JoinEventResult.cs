@@ -8,6 +8,7 @@ namespace EventFinder.Web.Services
         Success,
         EventNotFound,
         AlreadyJoined,
-        EventFull
+        EventFull,
+        CannotJoinOwnEvent
     }
 }

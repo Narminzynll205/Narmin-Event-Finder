@@ -115,15 +115,17 @@ namespace EventFinder.Web.Controllers
                 JoinEventResult.EventNotFound => NotFound(new { message = "Event not found." }),
                 JoinEventResult.AlreadyJoined => BadRequest(new { message = "You have already joined this event." }),
                 JoinEventResult.EventFull => BadRequest(new { message = "This event has reached its maximum number of participants." }),
+                JoinEventResult.CannotJoinOwnEvent => BadRequest(new { message = "Organizers cannot join their own event as a participant." }),
                 _ => BadRequest()
             };
         }
 
         /// <summary>
-        /// Returns the list of participants who joined the event.
+        /// Returns the list of participants who joined the event. Requires authentication
+        /// since it exposes participant names/profile pictures.
         /// </summary>
         [HttpGet("{id:int}/participants")]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> GetParticipants(int id)
         {
             var participants = await _eventService.GetParticipantsAsync(id);
