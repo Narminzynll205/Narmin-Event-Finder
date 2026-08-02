@@ -135,6 +135,15 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Apply pending migrations and seed sample data automatically in Development.
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+    await EventFinder.Web.Data.SeedData.SeedAsync(scope.ServiceProvider);
+}
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
