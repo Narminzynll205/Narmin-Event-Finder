@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using EventFinder.Web.DTOs.Users;
 using EventFinder.Web.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,6 +30,26 @@ namespace EventFinder.Web.Controllers
         {
             var nearbyUsers = await _userService.GetNearbyUsersAsync(CurrentUserId, lat, lng, radiusKm);
             return Ok(nearbyUsers);
+        }
+
+        /// <summary>
+        /// Updates the current authenticated user's coordinates (used for the nearby-users feature).
+        /// </summary>
+        [HttpPut("location")]
+        public async Task<IActionResult> UpdateLocation([FromBody] UpdateLocationDto dto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var updated = await _userService.UpdateLocationAsync(CurrentUserId, dto.Latitude, dto.Longitude);
+            if (!updated)
+            {
+                return NotFound();
+            }
+
+            return NoContent();
         }
     }
 }

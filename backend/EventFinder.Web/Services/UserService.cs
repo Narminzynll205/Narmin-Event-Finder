@@ -38,5 +38,21 @@ namespace EventFinder.Web.Services
                 })
                 .ToList();
         }
+
+        public async Task<bool> UpdateLocationAsync(string userId, double lat, double lng)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+
+            user.CurrentLat = lat;
+            user.CurrentLng = lng;
+            user.LastLocationUpdate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }
