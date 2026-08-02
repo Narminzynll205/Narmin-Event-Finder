@@ -49,13 +49,31 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
 
-// JWT authentication for API endpoints
+// JWT authentication for API endpoints (used by external/API clients), and cookie
+// authentication (registered automatically by AddIdentity as IdentityConstants.ApplicationScheme)
+// for the server-rendered Razor views. A policy scheme picks the right one per-request,
+// so both the JSON API and the MVC pages can share the same [Authorize] attributes.
 var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured.");
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = "Smart";
+    options.DefaultAuthenticateScheme = "Smart";
+    options.DefaultChallengeScheme = "Smart";
 })
+    .AddPolicyScheme("Smart", "JWT or Cookie", options =>
+    {
+        options.ForwardDefaultSelector = context =>
+        {
+            var authHeader = context.Request.Headers.Authorization.ToString();
+            if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) ||
+                context.Request.Query.ContainsKey("access_token"))
+            {
+                return JwtBearerDefaults.AuthenticationScheme;
+            }
+
+            return IdentityConstants.ApplicationScheme;
+        };
+    })
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
@@ -87,6 +105,16 @@ builder.Services.AddAuthentication(options =>
             }
         };
     });
+
+// Razor views sign in via SignInManager/cookies, so redirect unauthenticated/forbidden
+// browser requests to the MVC Login page instead of returning a bare 401/403.
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.SlidingExpiration = true;
+});
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEventRepository, EventRepository>();
