@@ -42,5 +42,19 @@ namespace EventFinder.Web.Repositories
                 .OrderBy(m => m.SentAt)
                 .ToListAsync();
         }
+
+        public async Task<List<string>> GetDirectContactIdsAsync(string userId)
+        {
+            var messages = await _context.ChatMessages
+                .Where(m => m.EventId == null && (m.SenderId == userId || m.ReceiverId == userId))
+                .ToListAsync();
+
+            return messages
+                .Select(m => m.SenderId == userId ? m.ReceiverId : m.SenderId)
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Select(id => id!)
+                .Distinct()
+                .ToList();
+        }
     }
 }

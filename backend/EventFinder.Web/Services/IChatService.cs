@@ -9,5 +9,7 @@ namespace EventFinder.Web.Services
         Task<List<ChatMessageDto>> GetDirectHistoryAsync(string userId1, string userId2);
 
         Task<List<ChatMessageDto>> GetEventHistoryAsync(int eventId);
+
+        Task<List<string>> GetDirectContactIdsAsync(string userId);
     }
 }

@@ -17,5 +17,10 @@ namespace EventFinder.Web.Repositories
         /// Group chat history for a given event, ordered by SentAt ascending.
         /// </summary>
         Task<List<ChatMessage>> GetEventHistoryAsync(int eventId);
+
+        /// <summary>
+        /// Distinct user ids the given user has exchanged direct (non-event) messages with.
+        /// </summary>
+        Task<List<string>> GetDirectContactIdsAsync(string userId);
     }
 }

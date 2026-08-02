@@ -1,0 +1,61 @@
+@model ChatIndexViewModel
+@{
+    ViewData["Title"] = "Chat";
+}
+
+<div class="container-fluid page-container py-4">
+    <div class="chat-shell d-flex">
+        <div class="chat-sidebar" style="width:300px;flex-shrink:0;">
+            @if (!Model.Conversations.Any())
+            {
+                <p class="text-muted p-3">Hələ heç bir söhbətiniz yoxdur. Bir tədbirə qoşulun və ya "Yaxınlıqda" xəritəsindən kiməsə yazın.</p>
+            }
+            else
+            {
+                foreach (var c in Model.Conversations)
+                {
+                    var isActive = Model.ActiveConversation != null && Model.ActiveConversation.IsEvent == c.IsEvent && Model.ActiveConversation.TargetId == c.TargetId;
+                    var url = c.IsEvent ? Url.Action("Event", "ChatPage", new { eventId = c.TargetId }) : Url.Action("Direct", "ChatPage", new { userId = c.TargetId });
+                    <a href="@url" class="chat-contact @(isActive ? "active" : "")">
+                        <strong>@(c.IsEvent ? "# " : "")@c.DisplayName</strong>
+                        <div class="small text-muted">@(c.IsEvent ? "Qrup söhbəti" : "Şəxsi mesaj")</div>
+                    </a>
+                }
+            }
+        </div>
+
+        <div class="flex-grow-1 d-flex flex-column">
+            @if (Model.ActiveConversation == null)
+            {
+                <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                    Söhbətə başlamaq üçün soldan seçin.
+                </div>
+            }
+            else
+            {
+                <div class="border-bottom p-3">
+                    <strong>@(Model.ActiveConversation.IsEvent ? "# " : "")@Model.ActiveConversation.DisplayName</strong>
+                </div>
+                <div id="chatMessages" class="chat-messages flex-grow-1"></div>
+                <div class="chat-input-bar d-flex gap-2">
+                    <input type="text" id="chatInput" class="form-control" placeholder="Mesaj yazın..." autocomplete="off" />
+                    <button id="chatSendBtn" class="btn btn-brand">Göndər</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@if (Model.ActiveConversation != null)
+{
+    <script>
+        var chatCurrentUserId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CurrentUserId));
+        var chatType = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ActiveConversation.IsEvent ? "event" : "direct"));
+        var chatTargetId = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ActiveConversation.TargetId));
+    </script>
+}
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+    <script src="~/js/chat.js" asp-append-version="true"></script>
+}

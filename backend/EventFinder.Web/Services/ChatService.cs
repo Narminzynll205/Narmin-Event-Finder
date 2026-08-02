@@ -79,6 +79,11 @@ namespace EventFinder.Web.Services
             return messages.Select(MapToDto).ToList();
         }
 
+        public Task<List<string>> GetDirectContactIdsAsync(string userId)
+        {
+            return _chatRepository.GetDirectContactIdsAsync(userId);
+        }
+
         private static ChatMessageDto MapToDto(ChatMessage m) => new()
         {
             Id = m.Id,
