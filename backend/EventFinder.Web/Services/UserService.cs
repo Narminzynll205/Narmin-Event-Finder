@@ -34,7 +34,9 @@ namespace EventFinder.Web.Services
                     FullName = $"{x.User.FirstName} {x.User.LastName}".Trim(),
                     ProfilePictureUrl = x.User.ProfilePictureUrl,
                     DistanceKm = x.Distance,
-                    LastLocationUpdate = x.User.LastLocationUpdate
+                    LastLocationUpdate = x.User.LastLocationUpdate,
+                    Latitude = x.User.CurrentLat!.Value,
+                    Longitude = x.User.CurrentLng!.Value
                 })
                 .ToList();
         }

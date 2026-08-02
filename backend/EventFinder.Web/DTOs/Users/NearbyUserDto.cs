@@ -11,5 +11,13 @@ namespace EventFinder.Web.DTOs.Users
         public double DistanceKm { get; set; }
 
         public DateTime? LastLocationUpdate { get; set; }
+
+        /// <summary>
+        /// Last known coordinates, exposed only to authenticated nearby-search callers
+        /// so the "Nearby users" map can plot a marker for this user.
+        /// </summary>
+        public double Latitude { get; set; }
+
+        public double Longitude { get; set; }
     }
 }
