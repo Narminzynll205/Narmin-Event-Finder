@@ -1,8 +1,37 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model List<EventFinder.Web.DTOs.Events.EventDto>
+@{
+    ViewData["Title"] = "Ana səhifə";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<section class="hero">
+    <div class="container page-container py-5">
+        <div class="row align-items-center py-4">
+            <div class="col-lg-7">
+                <h1 class="display-4 mb-3">Event Finder</h1>
+                <p class="fs-5 mb-4">Ətrafındakı tədbirləri kəşf et, yeni insanlarla tanış ol və öz tədbirini yarat.</p>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a asp-controller="EventsPage" asp-action="Index" class="btn btn-light btn-lg">Tədbirlərə bax</a>
+                    <a asp-controller="EventsPage" asp-action="Create" class="btn btn-outline-light btn-lg">Tədbir yarat</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container page-container py-5">
+    <h2 class="section-title">Yaxınlaşan tədbirlər</h2>
+
+    @if (!Model.Any())
+    {
+        <p class="text-muted">Hələ heç bir tədbir yoxdur.</p>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+            @foreach (var ev in Model)
+            {
+                @await Html.PartialAsync("_EventCard", ev)
+            }
+        </div>
+    }
 </div>

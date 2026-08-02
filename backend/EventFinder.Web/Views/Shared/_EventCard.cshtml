@@ -1,0 +1,18 @@
+@model EventFinder.Web.DTOs.Events.EventDto
+
+<div class="col">
+    <div class="event-card">
+        <img src="@(string.IsNullOrWhiteSpace(Model.ImageUrl) ? $"https://picsum.photos/seed/event{Model.Id}/500/300" : Model.ImageUrl)"
+             alt="@Model.Title" class="event-card-img" />
+        <div class="p-3">
+            <span class="badge badge-category mb-2">@Model.Category</span>
+            <h5 class="mb-1">@Model.Title</h5>
+            <p class="text-muted small mb-1">📅 @Model.StartDateTime.ToString("dd MMM yyyy, HH:mm")</p>
+            <p class="text-muted small mb-2">📍 @Model.Address</p>
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="small text-muted">@Model.CurrentParticipants/@Model.MaxParticipants iştirakçı</span>
+                <a asp-controller="EventsPage" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-brand">Ətraflı bax</a>
+            </div>
+        </div>
+    </div>
+</div>
