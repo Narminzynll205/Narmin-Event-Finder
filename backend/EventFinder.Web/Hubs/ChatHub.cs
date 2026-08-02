@@ -38,19 +38,19 @@ namespace EventFinder.Web.Hubs
         }
 
         /// <summary>
-        /// Sends a message (direct or event group chat), persists it and broadcasts it in real-time.
+        /// Sends a message (direct or event group chat) and persists it. Broadcasting to the
+        /// event group / receiver is handled inside <see cref="IChatService.SendMessageAsync"/>
+        /// (shared with the REST endpoint), so it must NOT be repeated here to avoid duplicate
+        /// messages being delivered to clients.
         /// </summary>
         public async Task SendMessage(SendMessageDto dto)
         {
             var message = await _chatService.SendMessageAsync(CurrentUserId, dto);
 
-            if (dto.EventId.HasValue)
+            // For direct messages, the service only notifies the receiver - push the message
+            // back to the sender's own connection too so they see it immediately.
+            if (!dto.EventId.HasValue && !string.IsNullOrEmpty(dto.ReceiverId))
             {
-                await Clients.Group(GroupName(dto.EventId.Value)).SendAsync("ReceiveMessage", message);
-            }
-            else if (!string.IsNullOrEmpty(dto.ReceiverId))
-            {
-                await Clients.User(dto.ReceiverId).SendAsync("ReceiveMessage", message);
                 await Clients.Caller.SendAsync("ReceiveMessage", message);
             }
         }
