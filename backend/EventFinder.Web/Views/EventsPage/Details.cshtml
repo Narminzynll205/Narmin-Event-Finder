@@ -1,0 +1,87 @@
+@model EventDetailsViewModel
+@{
+    ViewData["Title"] = Model.Event.Title;
+    var ev = Model.Event;
+}
+
+<div class="container page-container py-4">
+    <div id="alertPlaceholder"></div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <img src="@(string.IsNullOrWhiteSpace(ev.ImageUrl) ? $"https://picsum.photos/seed/event{ev.Id}/900/400" : ev.ImageUrl)"
+                 class="img-fluid rounded mb-3 w-100" style="max-height:400px;object-fit:cover;" alt="@ev.Title" />
+
+            <span class="badge badge-category mb-2">@ev.Category</span>
+            <h1 class="mb-2">@ev.Title</h1>
+            <p class="text-muted mb-1">📅 @ev.StartDateTime.ToString("dd MMMM yyyy, HH:mm")</p>
+            <p class="text-muted mb-3">📍 @ev.Address</p>
+            <p>@ev.Description</p>
+
+            <h5 class="mt-4">Yer</h5>
+            <div id="detailsMap" class="map-picker" style="height:320px;"></div>
+
+            <h5 class="mt-4">İştirakçılar (@Model.Participants.Count/@ev.MaxParticipants)</h5>
+            @if (!Model.Participants.Any())
+            {
+                <p class="text-muted">Hələ iştirakçı yoxdur.</p>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var p in Model.Participants)
+                    {
+                        <li class="list-group-item d-flex align-items-center gap-2">
+                            <span class="rounded-circle bg-brand text-white d-inline-flex align-items-center justify-content-center" style="width:32px;height:32px;">@(p.FullName.Length > 0 ? p.FullName[0].ToString().ToUpper() : "?")</span>
+                            @p.FullName
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
+        <div class="col-lg-4">
+            <div class="border rounded p-3">
+                <p class="mb-2"><strong>Təşkilatçı:</strong> @ev.OrganizerName</p>
+                <p class="mb-3"><strong>Yerlər:</strong> @ev.CurrentParticipants/@ev.MaxParticipants</p>
+
+                @if (Model.IsOrganizer)
+                {
+                    <a asp-action="Edit" asp-route-id="@ev.Id" class="btn btn-outline-brand w-100 mb-2">Redaktə et</a>
+                }
+                else if (!Model.IsAuthenticated)
+                {
+                    <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Details", "EventsPage", new { id = ev.Id })" class="btn btn-brand w-100 mb-2">Qoşulmaq üçün daxil olun</a>
+                }
+                else if (Model.HasJoined)
+                {
+                    <button class="btn btn-secondary w-100 mb-2" disabled>Artıq qoşulmusunuz</button>
+                }
+                else if (Model.IsFull)
+                {
+                    <button class="btn btn-secondary w-100 mb-2" disabled>Yer qalmayıb</button>
+                }
+                else
+                {
+                    <button id="joinBtn" data-event-id="@ev.Id" class="btn btn-brand w-100 mb-2">Qoşul</button>
+                }
+
+                @if (Model.IsAuthenticated && (Model.HasJoined || Model.IsOrganizer))
+                {
+                    <a asp-controller="ChatPage" asp-action="Event" asp-route-eventId="@ev.Id" class="btn btn-outline-brand w-100">Qrup söhbətinə keç</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        var eventLat = @ev.Latitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var eventLng = @ev.Longitude.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var eventTitle = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ev.Title));
+    </script>
+    <script src="~/js/event-details.js" asp-append-version="true"></script>
+}
