@@ -94,3 +94,33 @@ Frontend ayrıca "Antigravity" aləti ilə hazırlanıb bu backend-ə qoşulacaq
 - Şifrələr ASP.NET Core Identity-nin daxili hashing mexanizmi ilə saxlanılır, heç vaxt plain-text deyil.
 - Bütün endpoint-lər üçün müvafiq HTTP status kodları qaytarılır (200, 201, 204, 400, 401, 403, 404).
 - JWT konfiqurasiyası (`Jwt:Key`, `Jwt:Issuer`, `Jwt:Audience`, `Jwt:ExpiryMinutes`) `appsettings.json`-dadır — **production-da `Jwt:Key` mütləq dəyişdirilməli və environment variable/secret manager vasitəsilə verilməlidir**.
+
+## Test edilib və işləkdir
+
+Backend real HTTP sorğuları (curl-ekvivalent skriptlər) və real SignalR client ilə uçdan-uca test edilib. `dotnet build` (0 xəta/xəbərdarlıq), `dotnet ef database update` (SQLite DB yaradılıb, bütün migrasiyalar tətbiq olunub) və `dotnet run` (port açılıb, Swagger UI `/swagger` işləyir) təsdiqlənib.
+
+Test edilmiş və işlək təsdiqlənmiş endpoint-lər:
+
+- `POST /api/auth/register` — Organizer və Participant rolları ilə qeydiyyat
+- `POST /api/auth/login` — hər iki rol üçün JWT token alınması
+- `POST /api/events` — Organizer tərəfindən tədbir yaradılması (lat/lng ilə); Participant üçün 403 Forbidden düzgün qaytarılır
+- `GET /api/events` — bütün tədbirlərin siyahısı
+- `GET /api/events?category=&lat=&lng=&radiusKm=` — kateqoriya və məkana görə filtrasiya
+- `GET /api/events/{id}` — tək tədbir
+- `POST /api/events/{id}/join` — tədbirə qoşulma
+- `GET /api/events/{id}/participants` — iştirakçı siyahısı
+- `PUT /api/users/location` — istifadəçi məkanının yenilənməsi
+- `GET /api/users/nearby` — 3+ fərqli koordinatlı test istifadəçisi ilə Haversine məsafə hesablamasının düzgünlüyü ədədi olaraq təsdiqlənib (radiusdan kənar istifadəçilər düzgün istisna edilir, nəticələr məsafəyə görə artan sırada)
+- `POST /api/chat/send` və `GET /api/chat/history` — mesaj göndərilməsi və tarixçənin alınması
+- `/hubs/chat` (SignalR) — real .NET SignalR client ilə iki qoşulma arasında canlı mesaj çatdırılması təsdiqlənib
+
+**Edge case-lər:**
+
+| Ssenari | Gözlənilən | Nəticə |
+|---|---|---|
+| Token olmadan qorunan endpoint-ə sorğu | 401 Unauthorized | ✅ Təsdiqləndi |
+| Mövcud olmayan `eventId` | 404 Not Found | ✅ Təsdiqləndi |
+| Maksimum iştirakçı sayına çatmış tədbirə qoşulma | 400 Bad Request + mesaj | ✅ Təsdiqləndi |
+| Yanlış email/şifrə formatı ilə qeydiyyat | 400 Bad Request (validasiya) | ✅ Təsdiqləndi |
+
+**Tapılan və düzəldilmiş xəta:** `ChatHub.SendMessage` metodu SignalR üzərindən göndərilən hər mesajı iki dəfə broadcast edirdi (həm `ChatService.SendMessageAsync` daxilində, həm də `ChatHub` daxilində təkrar) — nəticədə chat-də hər mesaj 2 dəfə görünürdü. Düzəliş: `ChatHub.SendMessage`-dən artıq broadcast məntiqi silindi, yalnız birbaşa mesajlarda göndərənin öz bağlantısına bildiriş saxlanıldı. Real SignalR client ilə düzəlişdən əvvəl (2 mesaj) və sonra (1 mesaj) test edilərək təsdiqləndi.
