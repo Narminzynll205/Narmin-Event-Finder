@@ -63,11 +63,13 @@ namespace EventFinder.Web.Data
                 .HasForeignKey(c => c.ReceiverId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // ChatMessage.Event: cascade so an event's group chat history is removed
+            // together with the event (direct messages are unaffected since they have no EventId).
             builder.Entity<ChatMessage>()
                 .HasOne(c => c.Event)
                 .WithMany(e => e.ChatMessages)
                 .HasForeignKey(c => c.EventId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Store enum as string for readability in the database
             builder.Entity<Event>()

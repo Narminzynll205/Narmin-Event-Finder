@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using EventFinder.Web.Data;
 using EventFinder.Web.Hubs;
 using EventFinder.Web.Models;
@@ -14,7 +15,14 @@ using EventFinder.Web.Middleware;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+// Enums (e.g. EventCategory) are serialized as readable strings ("Music") instead of
+// numeric values, so the frontend does not need to hardcode magic numbers.
+builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
 
 // Database: provider is selected via "DatabaseProvider" config value (Sqlite | SqlServer)
 var databaseProvider = builder.Configuration.GetValue<string>("DatabaseProvider") ?? "Sqlite";
