@@ -124,6 +124,15 @@ builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddSignalR();
 
+// The Razor views' AJAX calls (join event, send chat message, update location) send
+// JSON bodies without a form field, so anti-forgery validation is done via this header
+// instead of the default hidden form input.
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "RequestVerificationToken";
+});
+
+
 // Swagger / OpenAPI documentation, with JWT bearer support so endpoints can be tested from the UI.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

@@ -29,6 +29,16 @@ namespace EventFinder.Web.Repositories
 
         Task<int> GetParticipantsCountAsync(int eventId);
 
+        /// <summary>
+        /// Events organized by the given user, most recent start date first.
+        /// </summary>
+        Task<List<Event>> GetOrganizedByUserAsync(string userId);
+
+        /// <summary>
+        /// Events the given user has joined as a participant.
+        /// </summary>
+        Task<List<Event>> GetJoinedByUserAsync(string userId);
+
         Task<bool> SaveChangesAsync();
     }
 }

@@ -192,6 +192,18 @@ namespace EventFinder.Web.Services
             }).ToList();
         }
 
+        public async Task<List<EventDto>> GetOrganizedByUserAsync(string userId)
+        {
+            var events = await _eventRepository.GetOrganizedByUserAsync(userId);
+            return events.Select(e => MapToDto(e)).ToList();
+        }
+
+        public async Task<List<EventDto>> GetJoinedByUserAsync(string userId)
+        {
+            var events = await _eventRepository.GetJoinedByUserAsync(userId);
+            return events.Select(e => MapToDto(e)).ToList();
+        }
+
         internal static EventDto MapToDto(Event ev, double? distanceKm = null)
         {
             return new EventDto

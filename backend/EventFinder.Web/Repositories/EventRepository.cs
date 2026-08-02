@@ -68,6 +68,22 @@ namespace EventFinder.Web.Repositories
             return await _context.EventParticipants.CountAsync(p => p.EventId == eventId);
         }
 
+        public async Task<List<Event>> GetOrganizedByUserAsync(string userId)
+        {
+            return await Query()
+                .Where(e => e.OrganizerId == userId)
+                .OrderByDescending(e => e.StartDateTime)
+                .ToListAsync();
+        }
+
+        public async Task<List<Event>> GetJoinedByUserAsync(string userId)
+        {
+            return await Query()
+                .Where(e => e.Participants.Any(p => p.UserId == userId))
+                .OrderByDescending(e => e.StartDateTime)
+                .ToListAsync();
+        }
+
         public async Task<bool> SaveChangesAsync()
         {
             return await _context.SaveChangesAsync() >= 0;

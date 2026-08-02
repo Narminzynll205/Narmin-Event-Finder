@@ -1,0 +1,58 @@
+@model EventsIndexViewModel
+@{
+    ViewData["Title"] = "Tədbirlər";
+}
+
+<div class="container page-container py-4">
+    <h1 class="section-title">Tədbirlər</h1>
+
+    <form method="get" asp-controller="EventsPage" asp-action="Index" class="filter-panel mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label">Kateqoriya</label>
+                <select name="category" class="form-select" asp-items="Html.GetEnumSelectList<EventCategory>()">
+                    <option value="">Hamısı</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Tarixdən</label>
+                <input type="date" name="dateFrom" class="form-control" value="@Model.DateFrom?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Tarixə qədər</label>
+                <input type="date" name="dateTo" class="form-control" value="@Model.DateTo?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Radius (km)</label>
+                <input type="number" name="radiusKm" id="radiusKm" class="form-control" value="@Model.RadiusKm" min="1" placeholder="5" />
+            </div>
+            <div class="col-md-2">
+                <button type="button" id="useLocationBtn" class="btn btn-outline-brand w-100">📍 Yaxınlıqda axtar</button>
+                <input type="hidden" name="lat" id="latInput" value="@Model.Lat" />
+                <input type="hidden" name="lng" id="lngInput" value="@Model.Lng" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-brand w-100">Filtrlə</button>
+            </div>
+        </div>
+        <div id="locationStatus" class="small text-muted mt-2"></div>
+    </form>
+
+    @if (!Model.Events.Any())
+    {
+        <p class="text-muted">Filterlərə uyğun tədbir tapılmadı.</p>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+            @foreach (var ev in Model.Events)
+            {
+                @await Html.PartialAsync("_EventCard", ev)
+            }
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/events.js" asp-append-version="true"></script>
+}

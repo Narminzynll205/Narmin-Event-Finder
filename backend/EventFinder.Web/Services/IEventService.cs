@@ -21,5 +21,9 @@ namespace EventFinder.Web.Services
         Task<JoinEventResult> JoinEventAsync(int eventId, string userId);
 
         Task<List<ParticipantDto>?> GetParticipantsAsync(int eventId);
+
+        Task<List<EventDto>> GetOrganizedByUserAsync(string userId);
+
+        Task<List<EventDto>> GetJoinedByUserAsync(string userId);
     }
 }
