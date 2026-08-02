@@ -17,5 +17,9 @@ namespace EventFinder.Web.Services
         Task<(bool Found, bool Authorized, EventDto? Result)> UpdateAsync(int id, EventUpdateDto dto, string organizerId);
 
         Task<(bool Found, bool Authorized)> DeleteAsync(int id, string organizerId);
+
+        Task<JoinEventResult> JoinEventAsync(int eventId, string userId);
+
+        Task<List<ParticipantDto>?> GetParticipantsAsync(int eventId);
     }
 }

@@ -138,6 +138,55 @@ namespace EventFinder.Web.Services
             return (true, true);
         }
 
+        public async Task<JoinEventResult> JoinEventAsync(int eventId, string userId)
+        {
+            var ev = await _eventRepository.GetByIdAsync(eventId);
+            if (ev == null)
+            {
+                return JoinEventResult.EventNotFound;
+            }
+
+            var existingParticipant = await _eventRepository.GetParticipantAsync(eventId, userId);
+            if (existingParticipant != null)
+            {
+                return JoinEventResult.AlreadyJoined;
+            }
+
+            var currentCount = await _eventRepository.GetParticipantsCountAsync(eventId);
+            if (currentCount >= ev.MaxParticipants)
+            {
+                return JoinEventResult.EventFull;
+            }
+
+            await _eventRepository.AddParticipantAsync(new EventParticipant
+            {
+                EventId = eventId,
+                UserId = userId,
+                JoinedAt = DateTime.UtcNow
+            });
+            await _eventRepository.SaveChangesAsync();
+
+            return JoinEventResult.Success;
+        }
+
+        public async Task<List<ParticipantDto>?> GetParticipantsAsync(int eventId)
+        {
+            var ev = await _eventRepository.GetByIdAsync(eventId);
+            if (ev == null)
+            {
+                return null;
+            }
+
+            var participants = await _eventRepository.GetParticipantsAsync(eventId);
+            return participants.Select(p => new ParticipantDto
+            {
+                UserId = p.UserId,
+                FullName = p.User != null ? $"{p.User.FirstName} {p.User.LastName}".Trim() : string.Empty,
+                ProfilePictureUrl = p.User?.ProfilePictureUrl,
+                JoinedAt = p.JoinedAt
+            }).ToList();
+        }
+
         internal static EventDto MapToDto(Event ev, double? distanceKm = null)
         {
             return new EventDto

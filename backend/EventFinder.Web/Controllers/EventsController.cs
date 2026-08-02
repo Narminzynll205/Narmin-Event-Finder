@@ -99,5 +99,40 @@ namespace EventFinder.Web.Controllers
 
             return NoContent();
         }
+
+        /// <summary>
+        /// Allows the current authenticated user to join an event.
+        /// </summary>
+        [HttpPost("{id:int}/join")]
+        [Authorize]
+        public async Task<IActionResult> Join(int id)
+        {
+            var result = await _eventService.JoinEventAsync(id, CurrentUserId);
+
+            return result switch
+            {
+                JoinEventResult.Success => Ok(new { message = "Successfully joined the event." }),
+                JoinEventResult.EventNotFound => NotFound(new { message = "Event not found." }),
+                JoinEventResult.AlreadyJoined => BadRequest(new { message = "You have already joined this event." }),
+                JoinEventResult.EventFull => BadRequest(new { message = "This event has reached its maximum number of participants." }),
+                _ => BadRequest()
+            };
+        }
+
+        /// <summary>
+        /// Returns the list of participants who joined the event.
+        /// </summary>
+        [HttpGet("{id:int}/participants")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetParticipants(int id)
+        {
+            var participants = await _eventService.GetParticipantsAsync(id);
+            if (participants == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(participants);
+        }
     }
 }
