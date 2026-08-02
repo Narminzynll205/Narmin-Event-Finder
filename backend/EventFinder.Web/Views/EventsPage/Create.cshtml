@@ -1,0 +1,9 @@
+@model EventFormViewModel
+@{
+    ViewData["Title"] = "Yeni tədbir";
+}
+
+<div class="container page-container py-4">
+    <h1 class="section-title">Yeni tədbir yarat</h1>
+    @await Html.PartialAsync("_EventForm", Model)
+</div>

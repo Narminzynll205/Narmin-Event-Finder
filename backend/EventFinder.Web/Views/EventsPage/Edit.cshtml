@@ -1,0 +1,14 @@
+@model EventFormViewModel
+@{
+    ViewData["Title"] = "Tədbiri redaktə et";
+}
+
+<div class="container page-container py-4">
+    <h1 class="section-title">Tədbiri redaktə et</h1>
+    @await Html.PartialAsync("_EventForm", Model)
+
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="mt-3"
+          onsubmit="return confirm('Bu tədbiri silmək istədiyinizə əminsiniz?');">
+        <button type="submit" class="btn btn-outline-danger">Tədbiri sil</button>
+    </form>
+</div>
